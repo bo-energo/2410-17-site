@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<form action="" method="post">{% csrf_token %}
+    {{ form }}
+    <p>Изменяемые объекты:</p>
+    <table border="1">
+        {% for item, property in items %}
+            <tr><td>{{ item }}</td><td>{{ property }}</td></tr>
+        {% endfor %}
+    </table>
+    <input type="hidden" name="action" value={{ action }} />
+    <input type="submit" name="apply" value="Сохранить" />
+</form>
+{% endblock %}

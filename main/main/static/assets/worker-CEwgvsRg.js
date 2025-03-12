@@ -1,0 +1,1 @@
+(function(){"use strict";const i=a=>{a.values.forEach(s=>{if(s.measure_unit.includes("ppm")){s.dz!=""&&(s.dz=s.dz/1e4),s.pdz!=""&&(s.pdz=s.pdz/1e4),s.values.forEach(r=>{r[1]=(r[1]/1e4).toFixed(6)});let o=s.measure_unit;s.measure_unit=o.replace("ppm",a.translation.volLabel).trim()}})};addEventListener("message",a=>{if(!a)return;const s=a.data;i(s),postMessage(s)})})();

@@ -1,0 +1,19 @@
+{% extends 'admin/change_list.html' %}
+
+{% block object-tools %}
+  <div>
+    <div style="display: inline-block;">
+      <form action="send_to_kafka" method="GET">
+        {% csrf_token %}
+        <input type="submit" value="Отправить сигналы в Kafka" />
+      </form>
+    </div>
+    <div style="display: inline-block;">
+      <form action="mms_data_to_kafka" method="GET">
+        {% csrf_token %}
+        <input type="submit" value="Отправить данные MMS в Kafka" />
+      </form>
+    </div>
+  </div>
+  {{ block.super }}
+{% endblock %}

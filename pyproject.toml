@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "2410-17-site"
+version = "0.1.0"
+description = "the backend of the ES ASMD product website for Zatonskaya TPS"
+authors = ["Donchack <flexway7@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^4.2.9"
+django-cors-headers = "^4.2"
+kafka-python = "^2.0.2"
+psycopg2-binary = "^2.9.9"
+psycopgbinary = "^0.0.1"
+python-dotenv = "^1.0.0"
+tablib = {version = "^3.5", extras = ["xls"]}
+fpdf2 = "^2.7"
+requests = "^2.32.3"
+asyncpg = "^0.30.0"
+openpyxl = "^3.1.2"
+shortuuid = "^1.0.13"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7"
+isort = "^5"
+toml = "^0.10.2"
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = "^1.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+skip_gitignore = true
+line_length=119
+lines_after_imports=2
+multi_line_output = 4
+include_trailing_comma = true
+use_parentheses = true
