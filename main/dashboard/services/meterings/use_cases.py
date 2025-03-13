@@ -17,7 +17,7 @@ from localization.services.translation.signal import SignalDescTralslation
 from localization.services.translation.pasp_signal import PaspSignalTralslation
 from localization.services.translation.gd_table import GDTableLineTralslation
 from localization.services.translation.app_interface import APITralslation
-from config_ui.services.block_manager2 import BlockManager2 as BlockManager
+from config_ui.services.block_manager import BlockManager
 from config_ui.services.pasp_manager import PaspManager
 
 
