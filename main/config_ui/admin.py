@@ -61,15 +61,6 @@ class PageAdmin(admin.ModelAdmin):
     list_filter = ['type',]
 
 
-# К удалению в будущем
-class PageBlockAdmin(admin.ModelAdmin):
-    list_display = ('id', 'page', 'block', 'x', 'y', 'w', 'h', 'min_w', 'min_h')
-    list_display_links = ('id', 'page', 'block', 'x', 'y', 'w', 'h', 'min_w', 'min_h')
-    search_fields = ('id', 'page_code', 'block_code', 'x', 'y', 'w', 'h', 'min_w', 'min_h')
-    list_select_related = ('page', 'block')
-    list_filter = ['page', 'block']
-
-
 class PagePanelAdmin(admin.ModelAdmin):
     list_display = ('id', 'page', 'panel', 'x', 'y', 'w', 'h', 'min_w', 'min_h')
     list_display_links = ('id', 'page', 'panel', 'x', 'y', 'w', 'h', 'min_w', 'min_h')
@@ -109,7 +100,6 @@ admin.site.register(Panel, PanelAdmin)
 admin.site.register(PanelBlock, PanelBlockAdmin)
 admin.site.register(PageType, PageTypeAdmin)
 admin.site.register(Page, PageAdmin)
-admin.site.register(PageBlock, PageBlockAdmin)
 admin.site.register(PagePanel, PagePanelAdmin)
 admin.site.register(PageBlockLocation, PageBlockLocationAdmin)
 admin.site.register(PagePanelLocation, PagePanelLocationAdmin)

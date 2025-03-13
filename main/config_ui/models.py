@@ -136,30 +136,6 @@ class Page(models.Model):
         return f"({self.type}) {self.code}"
 
 
-# К удалению в будущем
-class PageBlock(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    page = models.ForeignKey(
-        Page, models.DO_NOTHING, verbose_name='Страница')
-    block = models.ForeignKey(
-        Block, models.DO_NOTHING, verbose_name='Блок')
-    x = models.PositiveIntegerField(default=1, verbose_name='Левый верхний угол. Х')
-    y = models.PositiveIntegerField(default=1, verbose_name='Левый верхний угол. Y')
-    w = models.PositiveIntegerField(default=1, verbose_name='Ширина')
-    h = models.PositiveIntegerField(default=1, verbose_name='Высота')
-    min_w = models.PositiveIntegerField(blank=True, null=True, verbose_name='Минимальная ширина')
-    min_h = models.PositiveIntegerField(blank=True, null=True, verbose_name='Минимальная высота')
-
-    class Meta:
-        managed = True
-        db_table = 'page_block'
-        verbose_name = 'Блок страницы'
-        verbose_name_plural = 'Страницы пользовательского интерфейса. Блоки'
-
-    def __str__(self) -> str:
-        return f"{self.page}, {self.block}"
-
-
 class PagePanel(models.Model):
     id = models.BigAutoField(primary_key=True)
     page = models.ForeignKey(
