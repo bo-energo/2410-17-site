@@ -12,7 +12,7 @@ class SignalDesc:
     """Класс сигналов для запросов с фронта"""
     def __init__(self, id: int, code: str, name: str, unit_code: str, unit_name: str,
                  storage: str, category_id: int = None, category: str = None,
-                 last_val_table = None,
+                 last_val_table=None,
                  lim0_code: str = None, lim1_code: str = None,
                  precision: int = ROUND_NDIGIT,
                  visible: bool = False):
@@ -151,7 +151,6 @@ class SignalDesc:
                                          "category__name", "lim0_code", "lim1_code", "precision")
         return cls.__get_signals(sgn_guides)
 
-    
     @classmethod
     def get_signals_for_charts(cls, asset_id: int, tab: str):
         """

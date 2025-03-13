@@ -261,7 +261,7 @@ def _calc_state_loaded_data(loaded_data: LoadedData, timestamp_lpd: float = None
     print(f"{loaded_data.data_date_start = }  {loaded_data.data_date_end}")
     if timestamp_lpd:
         print(f"{time_func.timestamp_to_server_datestr(timestamp_lpd) = }")
-    
+
     # если загрузка имеет один из статусов 'Обработаны''Нет данных', 'Ошибка при обработке',
     # возвращаем ее без изменений
     if loaded_data.status in (STATUS_PROCESSING_COMPLETE, STATUS_NOT_DATA, STATUS_PROCESSING_ERROR):
@@ -366,7 +366,7 @@ def _timestamp_lpd_for_test(loaded_data: LoadedData):
     print(f"\n{data_timestampes = }")
     if not data_timestampes:
         return None
-    lpd_increment =  (time_func.now_with_tz().timestamp() - data_timestampes["now_timestamp"]) * 3600
+    lpd_increment = (time_func.now_with_tz().timestamp() - data_timestampes["now_timestamp"]) * 3600
     new_timestamp_lpd = data_timestampes["timestamp_lpd"] + lpd_increment
     print(f"\n{loaded_data.asset_guid}  {loaded_data.asset_name}")
     print(f'{data_timestampes["timestamp_lpd"] = }  {data_timestampes["data_timestamp_end"] = }')

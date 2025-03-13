@@ -657,8 +657,7 @@ def get_meterings_by_codes_synchronized_time(sgn_codes_to_out_key: dict, meterin
             try:
                 data_in_timestamp[out_key] = meterings[code]
             except Exception:
-                logger.exception(f"Для даты {date} отсутствует значение для "
-                                f"сигнала {code}.")
+                logger.exception(f"Для даты {date} отсутствует значение для сигнала {code}.")
                 continue
         result["dates"].append(date)
         for out_key, value in data_in_timestamp.items():

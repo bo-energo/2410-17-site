@@ -1571,7 +1571,6 @@ class SignalsGuideManager:
         else:
             return None
 
-    
     # @classmethod
     # def create_sgn_charttabs(cls, sgn_guide_instance: SignalsGuide, args: dict, to_db: bool):
     #     """Создает связку сигнала с вкладкой графиков"""

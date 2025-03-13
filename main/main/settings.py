@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     'localization.apps.LocalizationConfig',
 ]
 if os.getenv("KAFKA_SYNC", "true").lower() == "true":
-   INSTALLED_APPS.append('kafka_sync.apps.KafkaSyncConfig') 
+    INSTALLED_APPS.append('kafka_sync.apps.KafkaSyncConfig')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
