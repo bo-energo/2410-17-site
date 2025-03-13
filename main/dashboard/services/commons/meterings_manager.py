@@ -147,7 +147,7 @@ class MeteringsManager:
             date_start,
             date_end,
             is_reduced: bool = False,
-            count_points=None):
+            count_points: int = 2048):
         """
         Получить список значений сигналов за период [date_start, date_end].
 
@@ -175,7 +175,7 @@ class MeteringsManager:
         functions = [("max_over_time", "max"), ("min_over_time", "min"),
                      ("tmax_over_time", "tmax"), ("tmin_over_time", "tmin"),]
         if is_reduced:
-            period = int((date_end - date_start)/2048)
+            period = int((date_end - date_start)/count_points)
         else:
             period = 60
 
