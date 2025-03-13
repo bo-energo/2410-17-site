@@ -62,8 +62,9 @@ INSTALLED_APPS = [
     'config_ui.apps.ConfigUiConfig',
     'laser.apps.LaserConfig',
     'localization.apps.LocalizationConfig',
-    'kafka_sync.apps.KafkaSyncConfig',
 ]
+if os.getenv("KAFKA_SYNC", "true").lower() == "true":
+   INSTALLED_APPS.append('kafka_sync.apps.KafkaSyncConfig') 
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
