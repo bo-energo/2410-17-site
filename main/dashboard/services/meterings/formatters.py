@@ -732,7 +732,7 @@ def to_rd_nomogram(meterings_dict: dict, model_status_key: str, data_key: str, d
             return result
         try:
             timestamp = _get_timestamp_from_last(meterings_dict, data_key)
-            date = datetime.fromtimestamp(timestamp, time_func.get_tz()).replace(tzinfo=None)
+            date = datetime.fromtimestamp(timestamp, time_func.get_tz())
         except Exception:
             logger.exception("Не удалось получить время результата диагностики для РД номограммы.")
             return result
@@ -745,7 +745,7 @@ def to_rd_nomogram(meterings_dict: dict, model_status_key: str, data_key: str, d
         gases = ["h2", "ch4", "c2h6", "c2h4", "c2h2"]
         result["values"].update(
             {
-                "data": date,
+                "data": date.replace(tzinfo=None),
                 "gases": gases,
                 "fact": [round(data.get("fact", {}).get(gas), ROUND_NDIGIT) for gas in gases],
                 "etalon": [round(data.get("etalon", {}).get(gas), ROUND_NDIGIT) for gas in gases],

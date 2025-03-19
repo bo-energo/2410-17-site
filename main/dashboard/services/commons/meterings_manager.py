@@ -6,7 +6,7 @@ from typing import Dict, Iterable, List, Union
 import requests
 import shortuuid
 from dashboard.services.commons.asset_desc import AssetDesc
-from dashboard.utils.time_func import runtime_in_log
+from dashboard.utils.time_func import runtime_in_log, normalize_date
 
 from main.settings import VM_ADDRESS, VM_PREFIX, VML_ADDRESS, VML_PROJECT_ID
 
@@ -246,7 +246,8 @@ class MeteringsManager:
         return {code: timestamp for _, code, _, timestamp in last_data}
 
     @classmethod
-    def get_last_messages(cls, asset_id: str, group: str, count: int, fields: List[str] = [], type_str: str = ""):
+    def get_last_messages(
+            cls, asset_id: str, group: str, count: int, fields: List[str] = [], type_str: str = ""):
         asset_filter = ""
         type_filter = ""
         fields_filter = ""
@@ -274,6 +275,6 @@ class MeteringsManager:
         res = requests.post(req_query, headers=headers, data=data)
         for record in res.iter_lines():
             row_data = json.loads(record)
-            row_data["timestamp"] = datetime.strptime(row_data.pop("_time"), "%Y-%m-%dT%H:%M:%S%z").timestamp()
+            row_data["timestamp"] = normalize_date(row_data.pop("_time")).timestamp()
             result.append(row_data)
         return result
