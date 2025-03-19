@@ -65,9 +65,14 @@ def define_date_interval(
 
 
 def fix_string_datetime_format(date_string: str):
-    """Исправляет формат строки времени для последующей конвертации."""
+    """
+    Исправляет формат строки времени для последующей конвертации.
+    Если в конце 'date_string' есть символ 'z', то он заменяется на '+00:00'
+    и возвращается строковое представление момента времени осведомленного о
+    смещении часового пояса.
+    """
     if isinstance(date_string, str) and len(date_string) and date_string[-1].lower() == 'z':
-        return date_string[:-1]
+        return f"{date_string[:-1]}+00:00"
     else:
         return date_string
 
@@ -109,40 +114,29 @@ def safe_astimezone(dt: datetime | None, timezone: str = TIME_ZONE):
     """
     Возвращает объект datetime соответсвующий 'dt' в часовом поясе 'timezone'.
     Если 'timezone' некорректно то используется часовой пояс сервера Django.
+    Если 'dt' является неосведомленным о часовом поясе,
+    то считается что 'dt' указано в часовом поясе сервера Django.
     Если 'dt' не является datetime, возвращает None.
     """
     if isinstance(dt, datetime):
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=ZoneInfo(TIME_ZONE))
-        dt = dt.astimezone(get_tz(timezone))
+        return dt.astimezone(get_tz(timezone))
     else:
-        dt = None
-    return dt
-
-
-def safe_str_to_date_tz(date_string: str, timezone: str = TIME_ZONE, format: str = None):
-    """
-    Конвертирует строку времени в datetime c timezone.
-    Если 'timezone' некорректно, то используется часовой пояс сервера Django.
-    При неудачной конвертации возвращает None.
-    """
-    date = safe_str_to_date(date_string, format)
-    return safe_astimezone(date, timezone)
+        return None
 
 
 def normalize_date(dt: datetime | str | None, timezone: str = TIME_ZONE, format: str = None):
     """
     Возвращает объект datetime соответсвующий 'dt' в часовом поясе timezone.
     Если 'timezone' некорректно, то используется часовой пояс сервера Django.
+    Если 'dt' является неосведомленным о часовом поясе,
+    то считается что 'dt' указано в часовом поясе сервера Django.
     При неудачной конвертации возвращает None.
     """
     if isinstance(dt, str):
         dt = safe_str_to_date(dt, format)
-    if isinstance(dt, datetime):
-        dt = safe_astimezone(dt, timezone)
-    else:
-        dt = None
-    return dt
+    return safe_astimezone(dt, timezone)
 
 
 def now_with_tz(timezone: str = TIME_ZONE) -> datetime:
@@ -154,11 +148,6 @@ def now_with_tz(timezone: str = TIME_ZONE) -> datetime:
         return datetime.now(ZoneInfo(timezone))
     except Exception:
         return datetime.now(ZoneInfo(TIME_ZONE))
-
-
-if __name__ == "__main__":
-    TIME_ZONE = "UTC"
-    print(safe_str_to_date("2024-09-15", "%Y-%m-%d").timestamp())
 
 
 DATE_FORMAT_STR: str = "%Y-%m-%dT%H:%M:%S.%fZ"  # 2024-11-14T14:30:13.000Z
