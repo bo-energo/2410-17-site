@@ -9,17 +9,11 @@ urlpatterns = [
     path('substations', views.substations, name='substations'),
     # информация о подстанции
     path('substation/<int:objId>', views.substation_info, name='substation_info'),
-    # диагностические сообщения для одной подстанции
-    path(
-        'substation/<int:objId>/diagmess', views.asset_diag_mess,
-        kwargs={"is_subst": True}, name='asset_diag_mess'),
-    # диагностические сообщения для одного актива
-    path(
-        'asset/<int:objId>/diagmess', views.asset_diag_mess,
-        kwargs={"is_subst": False}, name='asset_diag_mess'),
     # последние диаг. сообщения системы
     path('diag-messages/last', views.get_diagmsg_last, name='get_diagmsg_last'),
 
+    # диагностические сообщения для одного актива
+    path('asset/<int:objId>/diagmess', views.asset_diag_mess, name='asset_diag_mess'),
     # последние значения сигналов для актива
     path('asset/<int:assetId>/meterings/last', views.last_meterings, name='last_meterings'),
     # значения сигналов за диапазон времени для актива для графиков
@@ -37,7 +31,7 @@ urlpatterns = [
     # данные 3D прогноза концентраций
     path('asset/<int:assetId>/3dforecast', views.forecast_3d, name='forecast_3d'),
     # cоздание файла экспорта диаг. сообщений
-    path('substation/<int:substId>/diagmsg/export/create', views.diag_mess_to_file, name='diag_mess_to_file'),
+    path('asset/<int:objId>/diagmsg/export/create', views.diag_mess_to_file, name='diag_mess_to_file'),
     # cоздание файла экспорта паспорта
     path('asset/<int:assetId>/passport/export/create', views.passport_to_file, name='passport_to_file'),
     # cоздание файла экспорта лимитов и констант

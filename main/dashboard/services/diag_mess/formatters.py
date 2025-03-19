@@ -23,7 +23,7 @@ class DiagMessRecord:
             return None
 
 
-def to_subst_page(diags: Iterable[tuple], count_diags):
+def to_subst_page(diags: Iterable[dict], count_diags):
     """Возвращает диаг. сообщения для отображения
     на странице подстанции"""
     if diags is None:
@@ -31,17 +31,18 @@ def to_subst_page(diags: Iterable[tuple], count_diags):
     return {
         "diag_messages": [
             {
-                "asset": mess.asset_name,
-                "asset_id": mess.asset_id,
-                "asset_type": mess.asset_type,
-                "type": mess.group,
-                "timestamp": mess.timestamp,
-                "message": mess.message,
-                "level": mess.level_code,
-                "id_tab": mess.id_tab,
-                "signals": mess.signals,
+                "asset": rec.get("asset_name"),
+                "asset_id": rec.get("asset"),
+                "asset_type": rec.get("asset_type"),
+                "type": rec.get("group"),
+                "timestamp": rec.get("time"),
+                "_time": rec.get("_time"),
+                "message": rec.get("message"),
+                "level": rec.get("level"),
+                "id_tab": rec.get("id_tab"),
+                "signals": rec.get("signals"),
             }
-            for rec in diags if (mess := DiagMessRecord.from_raw_record(*rec))
+            for rec in diags
         ],
         "count_messages": count_diags
     }

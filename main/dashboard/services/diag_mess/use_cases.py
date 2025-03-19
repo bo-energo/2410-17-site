@@ -1,16 +1,19 @@
 import logging
 from datetime import datetime
-from typing import Any, Dict, Iterable
+from functools import lru_cache
+from typing import Any, Dict
 
 from dashboard.services.commons.meterings_manager import MeteringsManager
-from dashboard.services.commons.assets_manager import AssetsManager
-from dashboard.services.commons.status import get_status_name
+from dashboard.services.commons.assets_manager import AssetsManager, AssetDesc
+from dashboard.services.commons.status import get_status_name, diag_msg_status_eng_to_ru
 from dashboard.utils import time_func
 from localization.services.translation.app_interface import APITralslation
 from localization.services.translation.diag_msg import DiagMsgTralslation
 
+from .diag_config import QueryConfig, ProcessedConfig, PaginationConfig
+from .input_params import InputParams
 from .formatters import to_subst_page
-from .sql_msg_manager import SQLDiagMsgManager
+from .vm_msg_manager import VMDiagMsgManager
 
 
 logger = logging.getLogger(__name__)
@@ -123,110 +126,146 @@ def get_last(asset_id: int = None, asset_guid: str = None,
     result = {
         "asset": asset_guid,
         "msg": _get_message(diag_msg, translator, use_template),
-        "date": datetime.fromtimestamp(t) if (t := diag_msg.get("timestamp")) else "",
+        "date": datetime.fromtimestamp(t, time_func.get_tz()) if (t := diag_msg.get("timestamp")) else "",
         "level": get_status_name(lvl) if (lvl := diag_msg.get("level")) else "",
     }
     return result, status
 
 
 @time_func.runtime_in_log
-def get_asset_diag_messages(obj_id: int, date_start: str, date_end: str,
-                            is_subst: bool = True,
+def get_asset_diag_messages(obj_id: int,
+                            date_start: str, date_end: str,
                             get_params: dict = None):
     """
-    Получить диагностические сообщения для актива или подстанции.
+    Получить диагностические сообщения для актива.
 
     Parameters:
         ---
         - obj_id: int - идентификатор объекта, для которого выбираются сообщения;
-        - is_subst: bool = True - если True, то сообщения выбираются
-        для подстанции, если False, то для актива.
+    """
+    input_params = InputParams.web_to_db_params(get_params)
+    query_config = QueryConfig(**input_params)
+    processed_config = ProcessedConfig(**input_params)
+    try:
+        filt_diags = get_messages_per_interval(
+            obj_id=obj_id,
+            date_start=date_start,
+            date_end=date_end,
+            query_config=query_config,
+            processed_config=processed_config)
+        diags_query_status = True
+    except Exception as ex:
+        logger.error(
+            "Не удалось получить диаг сообщения для: "
+            f"{obj_id = }, {date_start = }, {date_end = }. {ex}")
+        filt_diags = []
+        diags_query_status = False
+    pagin_config = PaginationConfig(**input_params)
+    count_diags = len(filt_diags)
+    filt_diags = filt_diags[pagin_config.get_start_slice():pagin_config.get_end_slice()]
+    return to_subst_page(filt_diags, count_diags), diags_query_status
+
+
+@time_func.runtime_in_log
+@lru_cache(maxsize=10)
+def get_messages_per_interval(
+        obj_id: int,
+        date_start: str,
+        date_end: str,
+        query_config: QueryConfig,
+        processed_config: ProcessedConfig):
+    """
+    Получить обработанные диаг сообщения за требуемый период
+    с учетом параметров конфигурации запроса и обработки.
+    При ошибке запроса генерирует исключение!
     """
     date_start, date_end = time_func.define_date_interval(
         date_start, date_end)
-    count_diags, count_query_status = get_asset_count_diag_messages(
-        obj_id, date_start, date_end, is_subst, get_params)
-    if count_diags and isinstance(count_diags, Iterable):
-        count_diags = count_diags[0]
-        if count_diags and isinstance(count_diags, Iterable):
-            count_diags = count_diags[0]
-        else:
-            count_diags = 0
+    asset = AssetsManager.get_by_id(obj_id)
+    if asset.guid:
+        raw_diags, diags_query_status = VMDiagMsgManager.per_interval(
+            asset.guid, date_start, date_end, query_config)
+        if not diags_query_status:
+            raise ValueError("Ошибка при запросе из БД диаг. сообщений.")
     else:
-        count_diags = 0
+        raw_diags = []
+        raise ValueError(f"У актива с id = {asset.id} отсутствует GUID.")
 
-    filt_diags, messages_query_status = get_asset_raw_diag_messages(
-        obj_id, date_start, date_end, is_subst, get_params)
-    return (to_subst_page(filt_diags, count_diags),
-            count_query_status and messages_query_status)
-
-
-@time_func.runtime_in_log
-def get_asset_count_diag_messages(
-        obj_id: int,
-        date_start: datetime, date_end: datetime,
-        is_subst: bool = True,
-        get_params: dict = None):
-    """
-    Получить кол-во диагностических сообщений для актива или подстанции.
-
-    Parameters:
-        ---
-        - obj_id: int - идентификатор объекта, для которого выбираются сообщения;
-        - is_subst: bool = True - если True, то сообщения выбираются
-        для подстанции, если False, то для актива.
-    """
-    try:
-        return SQLDiagMsgManager.count_per_interval(
-            obj_id,
-            date_start, date_end,
-            is_subst,
-            web_to_db_params(get_params)), True
-    except Exception:
-        if is_subst:
-            what = "подстанции"
-        else:
-            what = "актива"
-        logger.exception("Не удалось получить кол-во диагностических сообщений.\n"
-                         f"ID {what}: {obj_id}\n"
-                         f"Диапазон: [{date_start}, {date_end}]\n"
-                         f"Аргументы для запроса: {get_params}")
-
-        return [], False
+    filt_diags = _get_processed_messages(raw_diags, processed_config, asset)
+    _sorting_messages(filt_diags, processed_config)
+    return filt_diags
 
 
 @time_func.runtime_in_log
-def get_asset_raw_diag_messages(
-        obj_id: int,
-        date_start: datetime, date_end: datetime,
-        is_subst: bool = True,
-        get_params: dict = None):
+def _get_processed_messages(raw_diags: list[dict], config: ProcessedConfig, asset: AssetDesc):
     """
-    Получить диагностические сообщения для актива или подстанции.
-
-    Parameters:
-        ---
-        - obj_id: int - идентификатор объекта, для которого выбираются сообщения;
-        - is_subst: bool = True - если True, то сообщения выбираются
-        для подстанции, если False, то для актива.
+    Получить обработанные диаг. сообщения из списка сырых (из запроса)
+    записей диаг. сообщений.
     """
-    try:
-        return SQLDiagMsgManager.per_interval(
-            obj_id,
-            date_start, date_end,
-            is_subst,
-            web_to_db_params(get_params)), True
-    except Exception:
-        if is_subst:
-            what = "подстанции"
-        else:
-            what = "актива"
-        logger.exception("Не удалось получить диагностические сообщения.\n"
-                         f"ID {what}: {obj_id}\n"
-                         f"Диапазон: [{date_start}, {date_end}]\n"
-                         f"Аргументы для запроса: {get_params}")
+    if raw_diags:
+        translator = DiagMsgTralslation([], config._lang)
+        filt_diags = [
+            processed_rec
+            for rec in raw_diags
+            if (processed_rec := _get_processed_msg_record(
+                rec, translator, asset, config._search))]
+    else:
+        filt_diags = []
+    return filt_diags
 
-        return [], False
+
+def _get_processed_msg_record(
+            rec: dict,
+            translator: DiagMsgTralslation,
+            asset: AssetDesc,
+            search: str):
+    """Получить обработанную запись диаг. сообщения"""
+    msg_time = time_func.normalize_date(rec["_time"])
+    if not msg_time:
+        return None
+    str_msg_time = msg_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    raw_msg = rec.get("_msg", "").strip()
+    loc_msg = translator.get_translation(
+        rec.get("message_ids"),
+        rec.get("param_groups"))
+    if not (msg := loc_msg or raw_msg):
+        return None
+
+    exclude_messages = set(("null", "[]", "{}", "()"))
+    if msg.strip() in exclude_messages:
+        return None
+
+    asset_name = asset.name or ""
+
+    search = search.lower()
+    result_search = (
+        msg.lower().find(search) > -1 or asset_name.lower().find(search) > -1
+        or str_msg_time.lower().find(search) > -1)
+    if not result_search:
+        return None
+
+    return {
+        "time": str_msg_time,
+        "message": msg,
+        "asset_name": asset_name,
+        "asset": asset.id,
+        "asset_type": asset.type_code,
+        "level": get_status_name(rec.get("level")),
+        "level_txt": diag_msg_status_eng_to_ru(get_status_name(rec.get("level"))),
+        "group": rec.get("group"),
+        "_time": rec.get("_time"),
+        "id_tab": rec.get("id_tab"),
+        "signals": rec.get("signals"),
+    }
+
+
+@time_func.runtime_in_log
+def _sorting_messages(diags: list[dict], config: ProcessedConfig):
+    """Отсортировать записи диаг. сообщений"""
+    diags.sort(
+        key=lambda x: x.get(config.get_order_field()),
+        reverse=config.is_order_reverse())
 
 
 def _get_localization_report_header(labels: list[str], defaults: list[str], lang: str):
@@ -238,7 +277,7 @@ def _get_localization_report_header(labels: list[str], defaults: list[str], lang
 
 
 @time_func.runtime_in_log
-def get_subst_diag_messages_for_export(subst_id: int,
+def get_asset_diag_messages_for_export(obj_id: int,
                                        date_start: str, date_end: str,
                                        get_params: dict = None,
                                        lang: str = None):
@@ -246,9 +285,6 @@ def get_subst_diag_messages_for_export(subst_id: int,
     Получить диагностические сообщения для подстанции с id = subst_id
     для экспорта в файл
     """
-    if not isinstance(get_params, dict):
-        get_params = {}
-
     if lang is None:
         lang = "en"
     header_date_label = "d_mess_header_date"
@@ -260,26 +296,42 @@ def get_subst_diag_messages_for_export(subst_id: int,
         ["Date", "Asset", "Message", "Criticalily"],
         lang
     )
-
-    date_start, date_end = time_func.define_date_interval(
+    datetime_start, datetime_end = time_func.define_date_interval(
         date_start, date_end)
     date_export = datetime.now(tz=time_func.get_tz())
-    file_name = get_default_name_of_export_file(date_export, date_start, date_end)
-    filt_diags, messages_query_status = get_asset_raw_diag_messages(
-        subst_id, date_start, date_end, is_subst=True, get_params=get_params
-    )
+    file_name = get_default_name_of_export_file(date_export, datetime_start, datetime_end)
+
     result = {"headers": [header_names.get(header_date_label), header_names.get(header_asset_label),
                           header_names.get(header_mess_label), header_names.get(header_level_criticalily)]}
+
+    input_params = InputParams.web_to_db_params(get_params)
+    query_config = QueryConfig(**input_params)
+    processed_config = ProcessedConfig(**input_params)
+    try:
+        filt_diags = get_messages_per_interval(
+            obj_id=obj_id,
+            date_start=date_start,
+            date_end=date_end,
+            query_config=query_config,
+            processed_config=processed_config)
+        diags_query_status = True
+    except Exception as ex:
+        logger.error(
+            "Не удалось получить диаг сообщения для: "
+            f"{obj_id = }, {date_start = }, {date_end = }. {ex}")
+        filt_diags = []
+        diags_query_status = False
+
     result["data"] = [
         {
-            header_names.get(header_date_label): str(timestamp),
-            header_names.get(header_asset_label): asset_name,
-            header_names.get(header_mess_label): message,
-            header_names.get(header_level_criticalily): txt_level
+            header_names.get(header_date_label): rec.get("time"),
+            header_names.get(header_asset_label): rec.get("asset_name"),
+            header_names.get(header_mess_label): rec.get("message"),
+            header_names.get(header_level_criticalily): rec.get("level_txt")
         }
-        for _, _, asset_name, timestamp, message, _, _, txt_level, _, _ in filt_diags
+        for rec in filt_diags
     ]
-    return result, file_name, messages_query_status
+    return result, file_name, diags_query_status
 
 
 def get_property(assets: Dict[str, Any], guid: str, property: str):
@@ -288,22 +340,6 @@ def get_property(assets: Dict[str, Any], guid: str, property: str):
     значение требуемого property
     """
     return getattr(assets.get(guid), property, "")
-
-
-def web_to_db_params(get_params: dict):
-    """Возвращает словарь значений параметров для запроса объектов из БД"""
-    keys = {
-        "offset": "diagNumStart",
-        "limit": "diagCount",
-        "diag_type": "diagType",
-        "search": "search",
-        "order_field": "orderField",
-        "order_type": "orderType",
-        "lang": "lng",
-        "use_template": "use_template",
-    }
-    return {output_key: get_params.get(input_key)
-            for output_key, input_key in keys.items()}
 
 
 def get_default_name_of_export_file(date_export: datetime,

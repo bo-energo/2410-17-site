@@ -59,7 +59,7 @@ def substation_info(request, objId: int) -> object:
 
 
 @time_func.runtime_in_log
-def asset_diag_mess(request, objId: int, is_subst: bool = True) -> object:
+def asset_diag_mess(request, objId: int) -> object:
     """Возвращает диагностические сообщения для актива или подстанции"""
     req_status = request_status.RequestStatus(True)
     get = request.GET
@@ -72,7 +72,6 @@ def asset_diag_mess(request, objId: int, is_subst: bool = True) -> object:
         obj_id=objId,
         date_start=get.get("dateStart"),
         date_end=get.get("dateEnd"),
-        is_subst=is_subst,
         get_params=get
     )
     req_status.add(status, "Не удалось получить диагностические сообщения")
@@ -255,7 +254,7 @@ def hysteresis(request, assetId: int, tab: str) -> object:
 
 
 @time_func.runtime_in_log
-def diag_mess_to_file(request, substId: int) -> object:
+def diag_mess_to_file(request, objId: int) -> object:
     """Создает файл экспорта диаг. сообщений"""
     req_status = request_status.RequestStatus(True)
     get = request.GET
@@ -265,8 +264,8 @@ def diag_mess_to_file(request, substId: int) -> object:
         get = dict(get.items())
     get["use_template"] = USE_DIAG_TEMPLATE
     result = {}
-    diag_messages, file_name, status = diagmsg_use_cases.get_subst_diag_messages_for_export(
-        subst_id=substId,
+    diag_messages, file_name, status = diagmsg_use_cases.get_asset_diag_messages_for_export(
+        obj_id=objId,
         date_start=get.get("dateStart"),
         date_end=get.get("dateEnd"),
         get_params=get,
