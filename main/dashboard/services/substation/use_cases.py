@@ -54,6 +54,7 @@ def get_all_assets_with_statuses(lang: str):
             asset_by_subst[asset.subst_id]["assets"] = []
         asset_by_subst[asset.subst_id]["assets"].append(
             {
+                "id": asset.id,
                 "asset_type_name": asset.type_name,
                 "status": asset_values.get(asset.guid, {}).get(status_code, "Undefined"),
             }
