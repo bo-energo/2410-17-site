@@ -129,13 +129,13 @@ class MyParamsAdminForm(forms.ModelForm):
         topic = code.databus_source.name
 
         send_kafka_result = kafka_drv.KafkaProd.send_signal_value(topic, [data,])
-        # if not send_kafka_result:
-        #     raise ValidationError(
-        #         f"ОШИБКА! Не удалось отправить значение параметра {code.code} в Kafka.",
-        #         code=f"Failed to send parameter {code.code} value to Kafka",
-        #         params={"code": code, "asset": asset, "timestamp": timestamp,
-        #                 "value": value},
-        #     )
+        if not send_kafka_result:
+            raise ValidationError(
+                f"ОШИБКА! Не удалось отправить значение параметра {code.code} в Kafka.",
+                code=f"Failed to send parameter {code.code} value to Kafka",
+                params={"code": code, "asset": asset, "timestamp": timestamp,
+                        "value": value},
+            )
 
 
 class ChangeCategoryForm(forms.Form):

@@ -10,7 +10,6 @@ from dashboard.services.commons.meterings_manager import MeteringsManager
 from dashboard.services.commons.signal_desc import SignalDesc
 from dashboard.services.commons.status import get_status_name, txt_status_to_number100
 from dashboard.services.meterings.formatters import get_meterings_by_codes
-from dashboard.utils import time_func
 from dashboard.utils.number import Numeric
 from localization.services.translation.asset import AssetDescTralslation
 from localization.services.translation.conclus_table import ConclusTableLineTralslation

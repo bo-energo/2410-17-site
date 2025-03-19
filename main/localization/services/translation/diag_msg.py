@@ -30,8 +30,8 @@ class DiagMsgTralslation:
         for msg in diag_msg:
             try:
                 codes = loads(msg.get("message_ids"))
-            except Exception:
-                logger.exception("Не удалось получить коды диаг. сообщений.")
+            except Exception as ex:
+                logger.error(f"Не удалось получить коды диаг. сообщений. {ex}")
                 continue
             msg_tmp_codes.update(codes)
         return cls(msg_tmp_codes, lang)
@@ -42,14 +42,14 @@ class DiagMsgTralslation:
             try:
                 template_ids = loads(template_ids)
             except Exception as ex:
-                logger.exception(f"Не удалось десериализовать коды диаг. сообщений при локализации.")
+                logger.error(f"Не удалось десериализовать коды диаг. сообщений при локализации. {ex}")
                 return ""
             if params:
                 try:
                     params = loads(params)
                 except Exception as ex:
-                    logger.exception(
-                        f"Не удалось десериализовать параметры форматирования диаг. сообщений при локализации.")
+                    logger.error(
+                        f"Не удалось десериализовать параметры форматирования диаг. сообщений при локализации. {ex}")
                     params = []
             for i, id in enumerate(template_ids):
                 template = self._get_formatted_template(
@@ -65,10 +65,10 @@ class DiagMsgTralslation:
             try:
                 template = template.format(
                     **{f"param{i}": value for i, value in enumerate(template_params, 1)})
-            except Exception:
-                logger.exception(
+            except Exception as ex:
+                logger.error(
                     f"Не удалось подставить параметры {template_params} "
-                    f"в шаблон (id: {id}, content: '{template}') при формировании диаг сообщения.")
+                    f"в шаблон (id: {id}, content: '{template}') при формировании диаг сообщения. {ex}")
         return template
 
     @classmethod
