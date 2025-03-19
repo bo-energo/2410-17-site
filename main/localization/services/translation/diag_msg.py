@@ -1,5 +1,4 @@
 import logging
-from itertools import zip_longest
 from json import loads
 from typing import List, Iterable
 
@@ -15,14 +14,15 @@ class DiagMsgTralslation:
             diag_msgs = (
                 DiagMsgTranslts.objects
                 .select_related("msg")
-                .filter(msg__num_code__in=msg_tmp_codes, lang__code=lang)
-            )
-            self._templates = {
-                diagmsg.msg.num_code: diagmsg.content
-                for diagmsg in diag_msgs
-            }
+                .filter(msg__num_code__in=msg_tmp_codes, lang__code=lang))
         else:
-            self._templates = {}
+            diag_msgs = (
+                DiagMsgTranslts.objects
+                .select_related("msg")
+                .filter(lang__code=lang))
+        self._templates = {
+                diagmsg.msg.num_code: diagmsg.content
+                for diagmsg in diag_msgs}
 
     @classmethod
     def from_diag_msg(cls, diag_msg: List[dict], lang: str):
@@ -37,28 +37,52 @@ class DiagMsgTralslation:
         return cls(msg_tmp_codes, lang)
 
     def get_translation(self, template_ids: str, params: str):
-        try:
-            template_ids = loads(template_ids)
-        except Exception:
-            logger.exception("Не удалось получить коды диаг. сообщений для формирования диаг сообщения.")
-            return ""
-        try:
-            params = loads(params)
-        except Exception:
-            logger.exception("Не удалось получить параметры для формирования диаг сообщения.")
-            params = []
         result = []
-        for id, template_param in zip_longest(template_ids, params, fillvalue=[]):
-            template = self._templates.get(id)
-            if template_param and isinstance(template, str):
+        if template_ids:
+            try:
+                template_ids = loads(template_ids)
+            except Exception as ex:
+                logger.exception(f"Не удалось десериализовать коды диаг. сообщений при локализации.")
+                return ""
+            if params:
                 try:
-                    template = template.format(**{f"param{i}": value
-                                                  for i, value in enumerate(template_param, 1)})
-                except Exception:
-                    logger.exception(f"Не удалось подставить параметры {template_param} "
-                                     f"в шаблон (id: {id}, content: '{template}') "
-                                     "при формировании диаг сообщения.")
-                    continue
-            if template:
-                result.append(template)
+                    params = loads(params)
+                except Exception as ex:
+                    logger.exception(
+                        f"Не удалось десериализовать параметры форматирования диаг. сообщений при локализации.")
+                    params = []
+            for i, id in enumerate(template_ids):
+                template = self._get_formatted_template(
+                    self._get_template(id),
+                    self._get_template_params(params, i))
+                if template:
+                    result.append(template)
         return " ".join(result)
+
+    @classmethod
+    def _get_formatted_template(cls, template: str, template_params: list | tuple):
+        if template_params and template:
+            try:
+                template = template.format(
+                    **{f"param{i}": value for i, value in enumerate(template_params, 1)})
+            except Exception:
+                logger.exception(
+                    f"Не удалось подставить параметры {template_params} "
+                    f"в шаблон (id: {id}, content: '{template}') при формировании диаг сообщения.")
+        return template
+
+    @classmethod
+    def _get_template_params(cls, all_params: list[list], index: int):
+        if 0 <= index < len(all_params):
+            params = all_params[index]
+            if not isinstance(params, list | tuple):
+                params = [params,]
+        else:
+            params = None
+        return params
+
+    def _get_template(self, id: int):
+        template = self._templates.get(id)
+        if not isinstance(template, str):
+            template = None
+        return template
