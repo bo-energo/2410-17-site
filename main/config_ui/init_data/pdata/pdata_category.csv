@@ -1,0 +1,9 @@
+code;name;sort
+pdata_main;Общая информация;1
+pdata_power;Номинальная мощность;2
+pdata_voltage;Номинальные напряжения;3
+pdata_current;Номинальные токи;4
+pdata_kz_xx;Параметры КЗ и ХХ;5
+pdata_resistance;Сопротивление обмоток постоянному току;6
+pdata_isolation;Изоляция обмоток;7
+pdata_oil;Праметры масла;8
