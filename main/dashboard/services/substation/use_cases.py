@@ -124,7 +124,7 @@ def get_subst_assets(subst_id: int, lang: str):
         except Exception as ex:
             logger.error(f"Ошибка обработки данных за период для guid актива {asset.guid}. {ex}")
             period_values = {}
-        assets_info[asset.guid] = {
+        assets_info[asset.id] = {
             "asset_id": asset.id,
             "asset_type": asset.type_code,
             "name": asset.name,
