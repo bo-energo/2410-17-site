@@ -2,10 +2,9 @@ import logging
 import requests
 
 from copy import deepcopy
-from random import random
 from dashboard.models import Assets
 from dashboard.utils import request_status, time_func
-from laser.settings import LASER_SERVICE, _TIMESTAMP_BY_ASSET
+from laser.settings import LASER_SERVICE
 from laser.models import LoadedData
 from laser import vicroria_m as vmet
 from laser.diag_signals import sgn_needed_for_diag
@@ -45,8 +44,6 @@ def check_diag_settings(date_start: str, asset_guid: str):
         sgn_code = ts.get("metric", {}).get("signal")
         sgn_for_diag.pop(sgn_code)
     result[empty_signals_key] = [[code, name] for code, name in sorted(sgn_for_diag.items())]
-    # TODO убрать переопределение результата
-    result[empty_signals_key] = []
     return result, req_status
 
 
@@ -64,8 +61,6 @@ def get_all_loaded_data_info():
             vmet.get_timestamps_of_last_processed_data())
         for loaded_data in loadings:
             timestamp_lpd = timestamps_of_last_processed_data.get(loaded_data.asset_guid)
-            # TODO не коммитить
-            timestamp_lpd = _timestamp_lpd_for_test(loaded_data)
             loaded_data = _calc_state_loaded_data(loaded_data, timestamp_lpd)
             percent_processed = _calc_percent_processed_loaded_data(loaded_data, timestamp_lpd)
             result.append(_formatting_loaded_data_info(loaded_data, percent_processed))
@@ -90,8 +85,6 @@ def get_loaded_data_info(id: int):
         timestamps_of_last_processed_data = _get_timestamp_by_asset(
             vmet.get_timestamps_of_last_processed_data())
         timestamp_lpd = timestamps_of_last_processed_data.get(loaded_data.asset_guid)
-        # TODO не коммитить
-        timestamp_lpd = _timestamp_lpd_for_test(loaded_data)
         loaded_data = _calc_state_loaded_data(loaded_data, timestamp_lpd)
         percent_processed = _calc_percent_processed_loaded_data(loaded_data, timestamp_lpd)
         result = _formatting_loaded_data_info(loaded_data, percent_processed)
@@ -190,8 +183,6 @@ def read_data(date_start: str, date_end: str, asset_guid: str, ip: str):
             "Не удалось сохранить информацию о загруженных с прибора данных. Сообщите разработчикам.")
     else:
         result["loaded_data_id"] = loaded_data.id
-    # TODO не коммитить
-    _add_timestamp_by_asset(loaded_data)
     return result, req_status
 
 
@@ -257,11 +248,6 @@ def _calc_state_loaded_data(loaded_data: LoadedData, timestamp_lpd: float = None
     """
     Возвращает загрузку данных с обновленным статусом.
     """
-    print(f"{loaded_data.status = }")
-    print(f"{loaded_data.data_date_start = }  {loaded_data.data_date_end}")
-    if timestamp_lpd:
-        print(f"{time_func.timestamp_to_server_datestr(timestamp_lpd) = }")
-
     # если загрузка имеет один из статусов 'Обработаны''Нет данных', 'Ошибка при обработке',
     # возвращаем ее без изменений
     if loaded_data.status in (STATUS_PROCESSING_COMPLETE, STATUS_NOT_DATA, STATUS_PROCESSING_ERROR):
@@ -308,24 +294,13 @@ def _get_kwargs_loaded_data_info(input_data: dict):
     о загруженных данных. При ошибке возвращает пустой словарь!
     """
     try:
-        # TODO оставить 1-й вариант определения результата
-        if random() < 0.2:
-            return {
-                "asset_guid": input_data["asset"],
-                "timestamp_start": input_data["from_unix_utc_timestamp"],
-                "timestamp_end": input_data["to_unix_utc_timestamp"],
-                "data_timestamp_start": input_data["data_from_unix_utc_timestamp"],
-                "data_timestamp_end": input_data["data_to_unix_utc_timestamp"],
-            }
-        else:
-            return {
-                "asset_guid": input_data["asset"],
-                "timestamp_start": input_data["from_unix_utc_timestamp"],
-                "timestamp_end": input_data["to_unix_utc_timestamp"],
-                "data_timestamp_start": input_data["from_unix_utc_timestamp"],
-                "data_timestamp_end": input_data["to_unix_utc_timestamp"],
-            }
-
+        return {
+            "asset_guid": input_data["asset"],
+            "timestamp_start": input_data["from_unix_utc_timestamp"],
+            "timestamp_end": input_data["to_unix_utc_timestamp"],
+            "data_timestamp_start": input_data["data_from_unix_utc_timestamp"],
+            "data_timestamp_end": input_data["data_to_unix_utc_timestamp"],
+        }
     except Exception as ex:
         logger.error(
             f"Ошибка чтения входных данных', {input_data = }. {ex}")
@@ -334,7 +309,6 @@ def _get_kwargs_loaded_data_info(input_data: dict):
 
 def _get_timestamp_by_asset(vm_data: list[dict]):
     """Возвращает метки времени в разрезе активов"""
-    print(f"{vm_data = }")
     result = {}
     for ts in vm_data:
         guid = ts.get("metric", {}).get("asset")
@@ -342,37 +316,3 @@ def _get_timestamp_by_asset(vm_data: list[dict]):
         if guid and isinstance(value, (tuple, list)) and len(value) > 1:
             result[guid] = float(value[1])
     return result
-
-
-def _add_timestamp_by_asset(loaded_data: LoadedData):
-    """Добавляет набор меток времени для тестирования процесса обработки загрузки"""
-    # TODO не коммитить
-    _TIMESTAMP_BY_ASSET[loaded_data.asset_guid] = {
-        "timestamp_lpd": loaded_data.data_timestamp_start - 1,
-        "data_timestamp_end": loaded_data.data_timestamp_end,
-        "now_timestamp": time_func.now_with_tz().timestamp() + 30
-    }
-
-
-def _timestamp_lpd_for_test(loaded_data: LoadedData):
-    """
-    Возвращает метку времени послед. обработ. данных
-    для тестирования процесса обработки загрузки
-    """
-    # TODO не коммитить
-    print(f"\n\n{_TIMESTAMP_BY_ASSET = }")
-    data_timestampes = _TIMESTAMP_BY_ASSET.get(loaded_data.asset_guid)
-    print(f"{loaded_data.asset_guid = }")
-    print(f"\n{data_timestampes = }")
-    if not data_timestampes:
-        return None
-    lpd_increment = (time_func.now_with_tz().timestamp() - data_timestampes["now_timestamp"]) * 3600
-    new_timestamp_lpd = data_timestampes["timestamp_lpd"] + lpd_increment
-    print(f"\n{loaded_data.asset_guid}  {loaded_data.asset_name}")
-    print(f'{data_timestampes["timestamp_lpd"] = }  {data_timestampes["data_timestamp_end"] = }')
-    print(f'{lpd_increment = }  {new_timestamp_lpd = }')
-    if data_timestampes["timestamp_lpd"] <= new_timestamp_lpd <= data_timestampes["data_timestamp_end"]:
-        data_timestampes["timestamp_lpd"] = new_timestamp_lpd
-    elif new_timestamp_lpd > data_timestampes["data_timestamp_end"]:
-        data_timestampes["timestamp_lpd"] = data_timestampes["data_timestamp_end"]
-    return data_timestampes["timestamp_lpd"]

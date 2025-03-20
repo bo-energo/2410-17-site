@@ -16,7 +16,6 @@ def get_timestamps_of_last_processed_data():
     metric_name = 'main_models_status'
     QUERY = f"max(tlast_over_time({metric_name}[30y])) by (asset)"
     params = {"query": QUERY}
-    VM_ADDRESS = "http://10.0.1.86:8428"
     result = []
     try:
         response = requests.get(f"{VM_ADDRESS}/api/v1/query", params=params)
