@@ -51,12 +51,13 @@ class DiagMsgTralslation:
                     logger.error(
                         f"Не удалось десериализовать параметры форматирования диаг. сообщений при локализации. {ex}")
                     params = []
-            for i, id in enumerate(template_ids):
-                template = self._get_formatted_template(
-                    self._get_template(id),
-                    self._get_template_params(params, i))
-                if template:
-                    result.append(template)
+            if isinstance(template_ids, Iterable):
+                for i, id in enumerate(template_ids):
+                    template = self._get_formatted_template(
+                        self._get_template(id),
+                        self._get_template_params(params, i))
+                    if template:
+                        result.append(template)
         return " ".join(result)
 
     @classmethod
@@ -73,7 +74,7 @@ class DiagMsgTralslation:
 
     @classmethod
     def _get_template_params(cls, all_params: list[list], index: int):
-        if 0 <= index < len(all_params):
+        if isinstance(all_params, list | tuple) and 0 <= index < len(all_params):
             params = all_params[index]
             if not isinstance(params, list | tuple):
                 params = [params,]
