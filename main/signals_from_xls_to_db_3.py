@@ -21,6 +21,7 @@ from dashboard.models import (AccessPoints, Signals, SignalsGuide,
                               ChartTabs, SignalsChartTabs,
                               Substations, GeoMap, GeoMapSetting,
                               AssetsTypeChartTabs)
+from dashboard.utils import guid
 
 # Внимание! Данная версия (v.3) для настройки графиков сигналов
 #  в разрезе экземпляров оборудования!!!
@@ -1963,6 +1964,14 @@ def update_map_center():
         geo_sett.center_x = x_center
         geo_sett.center_y = y_center
         geo_sett.save()
+
+
+def update_assets_guid():
+    """Обновляет GUID у активов, если он пуст."""
+    for asset in Assets.objects.select_related("type", "substation").all():
+        if not asset.guid:
+           asset.guid = guid.generate()
+           asset.save()
 
 
 def main():
