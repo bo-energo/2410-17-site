@@ -100,7 +100,7 @@ def get_subst_assets(subst_id: int, lang: str):
         timestamp_start = timestamp_end - 86400 * 30
         queries_params.append(
             {
-                "asset_id": asset,
+                "asset_id": asset.guid,
                 "code_by_sources": signals_by_source,
                 "date_start": timestamp_start,
                 "date_end": timestamp_end,

@@ -243,14 +243,14 @@ def get_meterings_for_charts(asset: AssetDesc,
 
     task_query_last_data = MeteringsManager.get_last_meterings_by_codes_sync(asset, last_signals_codes)
     task_query_period_data = MeteringsManager.get_meterings(
-        asset,
+        asset.guid,
         signals_by_source,
         date_start.timestamp(), date_end.timestamp(),
         True
     )
 
     task_query_off_period_data = MeteringsManager.get_meterings(
-        asset,
+        asset.guid,
         offline_signals_by_source,
         date_start.timestamp(), date_end.timestamp(),
         False
@@ -309,7 +309,7 @@ def get_duval_triangle(asset: AssetDesc, date_start: str | None, date_end: str |
     signals = SignalDesc.get_signals_from_codes(sgn_codes_to_out_key.keys())
     date_start, date_end = time_func.define_date_interval(date_start, date_end)
     meterings, status = MeteringsManager.get_meterings(
-        asset,
+        asset.guid,
         SignalDesc.get_codes_by_source(signals, False),
         date_start.timestamp(), date_end.timestamp())
     return formatters.to_duval_triangle(sgn_codes_to_out_key, meterings), status
@@ -329,7 +329,7 @@ def get_duval_pentagon(asset: AssetDesc, date_start: str | None, date_end: str |
     signals = SignalDesc.get_signals_from_codes(sgn_codes_to_out_key.keys())
     date_start, date_end = time_func.define_date_interval(date_start, date_end)
     meterings, status = MeteringsManager.get_meterings(
-        asset,
+        asset.guid,
         SignalDesc.get_codes_by_source(signals, False),
         date_start.timestamp(), date_end.timestamp())
     return formatters.to_duval_pentagon(sgn_codes_to_out_key, meterings), status
@@ -380,7 +380,7 @@ def get_hysteresis(asset: AssetDesc,
     date_start, date_end = time_func.define_date_interval(date_start, date_end)
 
     meterings, meter_status = MeteringsManager.get_meterings(
-        asset,
+        asset.guid,
         SignalDesc.get_codes_by_source(signals, False),
         date_start.timestamp(), date_end.timestamp())
     return (formatters.to_hysteresis(signals, data_keys, meterings),
@@ -473,7 +473,7 @@ def __get_period_data_for_widgets(
     for link in block_manager.period_data_links.links:
         if (sgn := period_signals_by_codes.get(link.code)):
             sgn_data, query_status = MeteringsManager.get_meterings(
-                asset,
+                asset.guid,
                 {sgn._storage: set((sgn._code, ))},
                 link.last_date - link.period, link.last_date,
                 )

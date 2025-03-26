@@ -169,7 +169,7 @@ class MeteringsManager:
         if VM_PREFIX:
             table_prefix = VM_PREFIX + '_'
 
-        with_section = 'WITH (q='+table_prefix+'signals_value{'+f'asset="{asset_id.guid}", signal=~"' + \
+        with_section = 'WITH (q='+table_prefix+'signals_value{'+f'asset="{asset_id}", signal=~"' + \
             '|'.join(['|'.join(codes) for codes in code_by_sources.values()]) + '"})'
 
         functions = [("max_over_time", "max"), ("min_over_time", "min"),
