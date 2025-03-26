@@ -91,7 +91,7 @@ def get_subst_assets(subst_id: int, lang: str):
     period_signals = SignalDesc.get_signals_from_codes((tci_code,))
     signals_by_source = SignalDesc.get_codes_by_source(period_signals, False)
 
-    queries_params = []
+    queries_params: list[dict] = []
     for asset in assets:
         timestamp_end = asset_last_values.get(asset.guid, {}).get(tci_code, {}).get("timestamp")
         if timestamp_end is None:
@@ -109,18 +109,19 @@ def get_subst_assets(subst_id: int, lang: str):
             }
         )
 
-    queries_results = []
+    queries_results = {}
 
     for query_params in queries_params:
         res = MeteringsManager.get_meterings(**query_params)
-        queries_results.append(res[0])
+        if (asset_guid := query_params.get("asset_id")):
+            queries_results[asset_guid] = res[0]
         res_status = res_status and res[1]
 
     assets_info = {}
-    for i, asset in enumerate(assets):
+    for asset in assets:
         last_values = asset_last_values.get(asset.guid, {})
         try:
-            period_values = get_meterings_by_codes(queries_results[i])
+            period_values = get_meterings_by_codes(queries_results.get(asset.guid, []))
         except Exception as ex:
             logger.error(f"Ошибка обработки данных за период для guid актива {asset.guid}. {ex}")
             period_values = {}
