@@ -1970,8 +1970,8 @@ def update_assets_guid():
     """Обновляет GUID у активов, если он пуст."""
     for asset in Assets.objects.select_related("type", "substation").all():
         if not asset.guid:
-           asset.guid = guid.generate()
-           asset.save()
+            asset.guid = guid.generate()
+            asset.save()
 
 
 def main():

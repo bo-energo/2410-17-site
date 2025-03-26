@@ -22,4 +22,3 @@ with open(input_path, mode='r', encoding="cp1251") as input_f:
             if key:
                 output_f.write(f'    "{key}": "{value}",\n')
         output_f.write("}")
-

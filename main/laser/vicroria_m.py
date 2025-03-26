@@ -39,7 +39,7 @@ def get_last_value_signals(
     metric_name = f'{VM_PREFIX}_signals_value'
     QUERY = f"{metric_name}{{asset='{asset_guid}', signal=~'{'|'.join(codes)}'}}"
     if timestamp_start:
-       QUERY = QUERY + f" @ {timestamp_start}"
+        QUERY = QUERY + f" @ {timestamp_start}"
     params = {"query": QUERY, "step": step}
     try:
         response = requests.get(f"{VM_ADDRESS}/api/v1/query", params=params)
