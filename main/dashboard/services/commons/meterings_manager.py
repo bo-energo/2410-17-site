@@ -6,7 +6,7 @@ from typing import Dict, Iterable, List, Union
 import requests
 import shortuuid
 from dashboard.services.commons.asset_desc import AssetDesc
-from dashboard.utils.time_func import runtime_in_log, normalize_date
+from dashboard.utils.time_func import runtime_in_log, normalize_date, safe_str_to_date
 
 from main.settings import VM_ADDRESS, VM_PREFIX, VML_ADDRESS, VML_PROJECT_ID
 
@@ -42,7 +42,7 @@ class MeteringsManager:
 
     @classmethod
     def _get_msg_hash(cls, asset, signal, ts):
-        msg_id = asset+":"+signal+":"+str(int(ts))
+        msg_id = asset+":"+signal+":"+str(int(float(ts)))
         msg_hash = shortuuid.uuid(name=msg_id)
         return msg_hash
 
@@ -118,13 +118,13 @@ class MeteringsManager:
             headers = {'projectid': VML_PROJECT_ID or 0}
             query_logs = "message_id:in("+','.join(cls._get_msg_hash(el[0], el[1], el[3])
                                                    for el in indexes_dict)+") | fields asset,signal,_msg,_time"
-            query_dict = {"query": query_logs, "limit": 500, "start": (datetime.fromtimestamp(
-                0).isoformat()[:-3]+"Z"), "end": (datetime.now().isoformat()[:-3]+"Z")}
+            query_dict = {"query": query_logs, "limit": 500, "start": 0, "end": datetime.now().timestamp()}
             res = requests.post(VML_ADDRESS + '/select/logsql/query', headers=headers, data=query_dict)
             for data in res.iter_lines():
                 row_data = json.loads(data)
-                meterings.append([row_data['asset'], row_data['signal'], row_data['_msg'],
-                                  datetime.strptime(row_data['_time'], "%Y-%m-%dT%H:%M:%S%z").timestamp()])
+                if (time := safe_str_to_date(row_data['_time'])):
+                    meterings.append(
+                        [row_data['asset'], row_data['signal'], row_data['_msg'], time.timestamp()])
 
         return meterings, res_status
 
