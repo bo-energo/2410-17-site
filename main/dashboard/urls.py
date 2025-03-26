@@ -59,4 +59,7 @@ urlpatterns = [
     path('notification-guide', views.get_notification_guide, name='get_notification_guide'),
     # список вкладок графиков в разрезе типов оборудования
     path('tabs-list', views.get_tabs_list, name='get_tabs_list'),
+
+    path("signals/to-kafka", views.send_signals_to_kafka, name="send_signals_to_kafka"),
+    path("signals-guide/to-kafka", views.send_sgs_guide_to_kafka, name="send_sgs_guide_to_kafka"),
 ]

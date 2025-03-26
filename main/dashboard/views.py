@@ -8,6 +8,7 @@ from django.shortcuts import render
 from dashboard.services.diag_mess import use_cases as diagmsg_use_cases
 from dashboard.services.export import use_cases as export_use_cases
 from dashboard.services.geomap import use_cases as geomap_use_cases
+from dashboard.services.kafka import use_cases as kafka_use_cases
 from dashboard.services.meterings import use_cases as meter_use_cases
 from dashboard.services.signal_stats import use_cases as stats_use_cases
 from dashboard.services.substation import use_cases as subst_use_cases
@@ -713,6 +714,34 @@ def get_diagmsg_last(request) -> object:
         lang=get.get("lng"), use_template=USE_DIAG_TEMPLATE)
     req_status.add(status, "Ошибка формирования списка диаг. сообщений")
     result["status"] = req_status.get_message()
+    return JsonResponse(
+            result,
+            json_dumps_params={'ensure_ascii': False},
+            status=req_status.get_number_status()
+    )
+
+
+def send_signals_to_kafka(request):
+    """Отправка настроек сигналов в Kafka."""
+    req_status = request_status.RequestStatus(True)
+    status, mess = kafka_use_cases.send_devices()
+    req_status.add(status, mess)
+    result = {"status": req_status.get_message()}
+
+    return JsonResponse(
+            result,
+            json_dumps_params={'ensure_ascii': False},
+            status=req_status.get_number_status()
+    )
+
+
+def send_sgs_guide_to_kafka(request):
+    """Отправка описаний сигналов в Kafka."""
+    req_status = request_status.RequestStatus(True)
+    status, mess = kafka_use_cases.send_list_sg_guide()
+    req_status.add(status, mess)
+    result = {"status": req_status.get_message()}
+
     return JsonResponse(
             result,
             json_dumps_params={'ensure_ascii': False},
