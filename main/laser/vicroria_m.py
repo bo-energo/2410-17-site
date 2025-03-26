@@ -30,15 +30,16 @@ def get_timestamps_of_last_processed_data():
 def get_last_value_signals(
         asset_guid: str,
         codes: list[str],
-        timestamp_start: float,
+        timestamp_start: float | None = None,
         step: str = '30y'):
     """
     Возвращает последние значения сигналов
     для данного актива и списка кодов сигналов.
     """
     metric_name = f'{VM_PREFIX}_signals_value'
-
-    QUERY = f"{metric_name}{{asset='{asset_guid}', signal=~'{'|'.join(codes)}'}} @ {timestamp_start}"
+    QUERY = f"{metric_name}{{asset='{asset_guid}', signal=~'{'|'.join(codes)}'}}"
+    if timestamp_start:
+       QUERY = QUERY + f" @ {timestamp_start}"
     params = {"query": QUERY, "step": step}
     try:
         response = requests.get(f"{VM_ADDRESS}/api/v1/query", params=params)
