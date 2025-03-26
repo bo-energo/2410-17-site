@@ -59,10 +59,7 @@ def get_loaded_data_info(request) -> object:
 
 def check_diag_settings(request) -> object:
     get = request.GET
-    result, req_status = use_cases.check_diag_settings(
-        date_start=get.get("dateStart"),
-        asset_guid=get.get("asset"),
-        )
+    result, req_status = use_cases.check_diag_settings(get.get("asset"))
 
     result["status"] = req_status.get_message()
     return JsonResponse(

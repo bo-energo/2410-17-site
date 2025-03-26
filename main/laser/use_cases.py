@@ -18,7 +18,7 @@ STATUS_NOT_DATA = 4
 STATUS_PROCESSING_ERROR = 5
 
 
-def check_diag_settings(date_start: str, asset_guid: str):
+def check_diag_settings(asset_guid: str):
     """
     Возвращает результат проверки наличия значений сигналов,
     обязательных для успешной диагностики.
@@ -28,15 +28,9 @@ def check_diag_settings(date_start: str, asset_guid: str):
     sgn_for_diag = deepcopy(sgn_needed_for_diag)
     req_status = request_status.RequestStatus(True)
 
-    time_start = time_func.normalize_date(date_start)
-    if time_start is None:
-        req_status.add(False, "Ошибка обработки запроса. Обратитесь к разработчикам.")
-        return result, req_status
-
     data, status = vmet.get_last_value_signals(
         asset_guid,
-        sgn_for_diag.keys(),
-        time_start.timestamp())
+        sgn_for_diag.keys())
     if not status:
         req_status.add(False, "Ошибка запроса к БД. Обратитесь к разработчикам.")
         return result, req_status
