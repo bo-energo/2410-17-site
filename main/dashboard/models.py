@@ -1,8 +1,6 @@
 import logging
 from typing import List
-from datetime import datetime
 from django.db import models
-from django.db import connection
 from django.db.models import Prefetch
 from django.db.models import QuerySet
 from django.db.models import F
@@ -11,6 +9,7 @@ from django.utils import timezone
 from dashboard.data.assistmodel import AssistMixin
 from dashboard.services.django_models.use_cases import (
     get_asset_image_path, get_substation_image_path, get_asset_scheme_image_path)
+from dashboard.utils import guid
 
 
 logger = logging.getLogger(__name__)
@@ -128,6 +127,16 @@ class Assets(models.Model):
             )
         except Exception:
             return None
+
+    @classmethod
+    def update_guid_if_empty(cls):
+        """Добавить GUID активам, у которых он отсутствует."""
+        updated_assets = []
+        for a in cls.objects.only("guid").all():
+            if not a.guid:
+                a.guid = guid.generate()
+                updated_assets.append(a)
+        cls.objects.bulk_update(updated_assets, ["guid"])
 
 
 class AssetsType(models.Model):
@@ -267,7 +276,7 @@ class Devices(AssistMixin, models.Model):
                 enabled=True)
 
     @classmethod
-    def dict_filter_devices(cls, devices: QuerySet,
+    def dict_filter_devices(cls, devices: QuerySet["Devices"],
                             listener: bool = False) -> list:
         """Возвращает список приборов удовлетворяющих
         переданным аргументам.
@@ -295,6 +304,12 @@ class Devices(AssistMixin, models.Model):
             filt_devices = devices
         for device in filt_devices:
             for signal in device.signs:
+                # пропускать сигнал не привязанный к активу
+                if not signal.asset:
+                    continue
+                # пропускать сигнал, если он или его источник данных не имеют расписания
+                if not signal.schedule or not device.schedule:
+                    continue
                 dict_device = device.get_dict(del_attr=del_attr_device)
                 dict_device["additional"] = {}
                 # создание словаря параметров точки доступа
@@ -376,25 +391,13 @@ class Devices(AssistMixin, models.Model):
         - 0 - нет сообщений
         - 1 - сообщение о времени исполнения и кол-ве SQL запросов
         - 2 - дополнительно к 1 уровню список SQL запросов"""
-        start_time = datetime.utcnow().timestamp()
-        start = len(connection.queries)
-        signals_choices = signal.objects.select_related(
-                "asset", "code", "formula").filter(enabled=True)
-        prefetch = Prefetch("signals_set", queryset=signals_choices,
+        Assets.update_guid_if_empty()
+        prefetch = Prefetch("signals_set", queryset=Signals.get_enabled_signals(),
                             to_attr="signs")
         devices = cls.get_enable_devices(prefetch)
 
         readers = cls.dict_filter_devices(devices)
         listeners = cls.dict_filter_devices(devices, listener=True)
-
-        diff = len(connection.queries) - start
-        if debug_level >= 1:
-            logger.info(f"Count of query after Devices.changes_for_kafka: {diff}")
-            logger.debug("Time execute Devices.changes_for_kafka = "
-                         f"{datetime.utcnow().timestamp() - start_time}")
-        if debug_level >= 2:
-            for q in connection.queries[-diff:]:
-                logger.debug(q)
         return readers, listeners
 
 
@@ -621,6 +624,22 @@ class Signals(AssistMixin, models.Model):
         db_table = 'signals'
         verbose_name_plural = 'Сигналы'
         verbose_name = 'Сигнал'
+
+    @classmethod
+    def get_enabled_signals(cls):
+        """Возвращает QuerySet включенных сигналов"""
+        return cls.objects.select_related(
+            "code", "code__sg_type", "code__unit", "code__category",
+            "code__group", "code__data_type", "code__plot_type",
+            "code__databus_source", "code__dynamic_storage",
+            "asset", "asset__type", "asset__substation",
+            "device", "device__model", "device__model__device_type",
+            "device__access_point", "device__schedule",
+            "device__protocol",
+            "value_type",
+            "unit_source",
+            "schedule",
+            "formula").filter(enabled=True)
 
     def __str__(self) -> str:
         code = self.code.code if self.code else None

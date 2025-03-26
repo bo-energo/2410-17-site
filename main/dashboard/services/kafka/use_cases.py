@@ -2,7 +2,7 @@ import logging
 from typing import List, Iterable, Union
 
 from main.settings import KAFKA, TOPICS
-from dashboard.models import Assets, Devices, Signals, SignalsGuide
+from dashboard.models import Assets, Devices, SignalsGuide
 from dashboard.utils.kafka_drv import KafkaProd
 from dashboard.utils import guid
 from dashboard.services.mms.mms_config import MMSConfig
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def send_devices(modified_entity: str = ""):
     """Отправка сигналов в разрезе приборов в Kafka"""
-    devices = Devices.changes_for_kafka(Signals)
+    devices = Devices.changes_for_kafka()
     try:
         return KafkaProd.send_devices_to_kafka(*devices)
     except Exception:

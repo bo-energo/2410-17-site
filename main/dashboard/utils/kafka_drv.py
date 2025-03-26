@@ -35,7 +35,7 @@ class KafkaProd:
         return " ".join(messages)
 
     @classmethod
-    def send_devices_to_kafka(cls, readers, listeners):
+    def send_devices_to_kafka(cls, readers: list, listeners: list):
         """Отправка списков приборов readers, listeners в Kafka"""
         messages: List[str] = []
         result = True
@@ -47,12 +47,8 @@ class KafkaProd:
         if not result:
             return result, messages
         producer = cls(bootstrap_servers=KAFKA)
-        if readers:
-            producer.send(topic=TOPICS.get("READER"), value=readers,
-                          key=guid.generate())
-        if listeners:
-            producer.send(topic=TOPICS.get("LISTENER"), value=listeners,
-                          key=guid.generate())
+        producer.send(topic=TOPICS.get("READER"), value=readers, key=guid.generate())
+        producer.send(topic=TOPICS.get("LISTENER"), value=listeners, key=guid.generate())
         return result, ["Настройки сигналов успешно отправлены в Kafka"]
 
     @classmethod
