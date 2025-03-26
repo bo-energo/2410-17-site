@@ -4,6 +4,8 @@ import requests
 from copy import deepcopy
 from dashboard.models import Assets
 from dashboard.utils import request_status, time_func
+from dashboard.services.commons.meterings_manager import MeteringsManager
+from dashboard.services.commons.assets_manager import AssetsManager
 from laser.settings import LASER_SERVICE
 from laser.models import LoadedData
 from laser import vicroria_m as vmet
@@ -28,15 +30,25 @@ def check_diag_settings(asset_guid: str):
     sgn_for_diag = deepcopy(sgn_needed_for_diag)
     req_status = request_status.RequestStatus(True)
 
-    data, status = vmet.get_last_value_signals(
-        asset_guid,
+    assets = AssetsManager.get_by_guids((asset_guid,))
+    if assets:
+        asset = assets[0]
+    else:
+        req_status.add(
+            False,
+            "Не найдено оборудование. Проверьте что в системе присутствует оборудование с GUID = {asset_guid}")
+        return result, req_status
+    data, status = MeteringsManager.get_last_meterings(
+        asset,
         sgn_for_diag.keys())
     if not status:
         req_status.add(False, "Ошибка запроса к БД. Обратитесь к разработчикам.")
         return result, req_status
     for ts in data:
-        sgn_code = ts.get("metric", {}).get("signal")
-        sgn_for_diag.pop(sgn_code)
+        if len(ts) > 2:
+            sgn_for_diag.pop(ts[1])
+        else:
+            continue
     result[empty_signals_key] = [[code, name] for code, name in sorted(sgn_for_diag.items())]
     return result, req_status
 
