@@ -150,8 +150,8 @@ class DeviceTypesAdmin(admin.ModelAdmin):
 
 class DevicesAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'name', 'model', 'schedule', 'access_point', 'common_address',
-        'wordorder', 'byteorder', 'enabled', 'protocol', 'modbus_function',
+        'id', 'enabled', 'name', 'model', 'schedule', 'access_point', 'common_address',
+        'wordorder', 'byteorder', 'protocol', 'modbus_function',
         'mms_logical_device',
     )
     list_display_links = (
@@ -181,7 +181,7 @@ class DevicesAdmin(admin.ModelAdmin):
             }
         ),
     )
-    actions = ['change_acc_point',]
+    actions = ['change_acc_point', 'enabled_true', 'enabled_false',]
 
     @admin.action(description="ИЗМЕНИТЬ точку доступа")
     def change_acc_point(self, request, queryset):
@@ -192,6 +192,32 @@ class DevicesAdmin(admin.ModelAdmin):
         if "apply" in request.POST:
             _send_signals_to_kafka(self, request, "Devices")
         return result
+
+    @admin.action(description="ВКЛЮЧИТЬ выбранные источники данных")
+    def enabled_true(self, request, queryset):
+        """Для выбранных источников данных 'enabled' делается True."""
+        try:
+            count = queryset.filter(enabled=False).update(enabled=True)
+        except Exception:
+            self.message_user(request, 'ОШИБКА включения источников данных. Проверьте данные.',
+                              level=messages.ERROR)
+        else:
+            if count:
+                _send_signals_to_kafka(self, request, "Devices")
+            self.message_user(request, 'ВКЛЮЧЕНЫ %s источников данных.' % count)
+
+    @admin.action(description="ОТКЛЮЧИТЬ выбранные источники данных")
+    def enabled_false(self, request, queryset):
+        """Для выбранных источников данных 'enabled' делается False."""
+        try:
+            count = queryset.filter(enabled=True).update(enabled=False)
+        except Exception:
+            self.message_user(request, 'ОШИБКА отключения источников данных. Проверьте данные.',
+                              level=messages.ERROR)
+        else:
+            if count:
+                _send_signals_to_kafka(self, request, "Devices")
+            self.message_user(request, 'ОТКЛЮЧЕНЫ %s источников данных.' % count)
 
     def save_model(self, request, obj: Devices, form, change):
         if obj.is_changed():
