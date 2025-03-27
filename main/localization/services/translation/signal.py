@@ -3,6 +3,8 @@ from typing import List
 
 from dashboard.services.commons.signal_desc import SignalDesc
 from dashboard.utils.time_func import runtime_in_log
+from dashboard.models import SignalsGuide, SignalСategories, MeasureUnits
+from localization.settings import ADMIN_VALUE_LANG
 from localization.models import (SignalsGuideTranslts, SignalsCategoriesTranslts,
                                  MeasureUnitsTranslts, APILabelsTranslts)
 
@@ -76,34 +78,58 @@ class SignalDescTralslation:
 
     @classmethod
     def get_sgn_guide_translations(cls, sguide_ids: set[int], lang: str):
-        return {
-            inst.sgn_guide.id: inst.content
-            for inst in SignalsGuideTranslts.objects
-            .select_related("sgn_guide", "lang")
-            .filter(sgn_guide__id__in=list(sguide_ids), lang__code=lang)
-            .only("sgn_guide__id", "content", "lang__code")
-        }
+        if lang == ADMIN_VALUE_LANG:
+            return {
+                inst.id: inst.name
+                for inst in SignalsGuide.objects
+                .filter(id__in=list(sguide_ids))
+                .only("id", "name")
+            }
+        else:
+            return {
+                inst.sgn_guide.id: inst.content
+                for inst in SignalsGuideTranslts.objects
+                .select_related("sgn_guide", "lang")
+                .filter(sgn_guide__id__in=list(sguide_ids), lang__code=lang)
+                .only("sgn_guide__id", "content", "lang__code")
+            }
 
     @classmethod
     def get_sgn_category_translations(cls, category_ids: set[int], lang: str):
-        return {
-            inst.category.id: inst.content
-            for inst in SignalsCategoriesTranslts.objects
-            .select_related("category", "lang")
-            .filter(category__id__in=list(category_ids), lang__code=lang)
-            .only("category__id", "content", "lang__code")
-        }
+        if lang == ADMIN_VALUE_LANG:
+            return {
+                inst.id: inst.name
+                for inst in SignalСategories.objects
+                .filter(id__in=list(category_ids))
+                .only("id", "name")
+            }
+        else:
+            return {
+                inst.category.id: inst.content
+                for inst in SignalsCategoriesTranslts.objects
+                .select_related("category", "lang")
+                .filter(category__id__in=list(category_ids), lang__code=lang)
+                .only("category__id", "content", "lang__code")
+            }
 
     @classmethod
     @runtime_in_log
     def get_unit_translations(cls, unit_codes: set[int], lang: str):
-        return {
-            inst.unit.code: inst.content
-            for inst in MeasureUnitsTranslts.objects
-            .select_related("unit", "lang")
-            .filter(unit__code__in=list(unit_codes), lang__code=lang)
-            .only("unit__code", "content", "lang__code")
-        }
+        if lang == ADMIN_VALUE_LANG:
+            return {
+                inst.code: inst.name
+                for inst in MeasureUnits.objects
+                .filter(code__in=list(unit_codes))
+                .only("code", "name")
+            }
+        else:
+            return {
+                inst.unit.code: inst.content
+                for inst in MeasureUnitsTranslts.objects
+                .select_related("unit", "lang")
+                .filter(unit__code__in=list(unit_codes), lang__code=lang)
+                .only("unit__code", "content", "lang__code")
+            }
 
     @classmethod
     def get_api_labels_translations(cls, api_labels: set[str], lang: str):
