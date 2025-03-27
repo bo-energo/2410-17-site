@@ -74,7 +74,7 @@ class Assets(models.Model):
         verbose_name='Уникальный идентификатор',
     )
     type = models.ForeignKey(
-        'AssetsType', models.DO_NOTHING,
+        'AssetsType', models.PROTECT,
         blank=True, null=True, verbose_name='Категория')
     name = models.CharField(
         max_length=200, blank=True, null=True, verbose_name='Диспетчерское наименование')
@@ -174,7 +174,7 @@ class DeviceModels(models.Model):
     name = models.CharField(
         max_length=200, blank=True, null=True, verbose_name='Наименование',)
     device_type = models.ForeignKey(
-        'DeviceTypes', models.DO_NOTHING, blank=True, null=True, verbose_name='Тип',)
+        'DeviceTypes', models.PROTECT, blank=True, null=True, verbose_name='Тип',)
     manufacturer = models.CharField(
         max_length=200, blank=True, null=True, verbose_name='Производитель',)
     measuring_range = models.CharField(
@@ -229,11 +229,11 @@ class Devices(AssistMixin, models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=400, verbose_name='Наименование',)
     model = models.ForeignKey(
-        DeviceModels, models.DO_NOTHING, blank=True, null=True, verbose_name='Тип',)
+        DeviceModels, models.PROTECT, blank=True, null=True, verbose_name='Тип',)
     access_point = models.ForeignKey(
-        AccessPoints, models.DO_NOTHING, blank=True, null=True, verbose_name='Точка доступа',)
+        AccessPoints, models.PROTECT, blank=True, null=True, verbose_name='Точка доступа',)
     schedule = models.ForeignKey(
-        'Schedules', models.DO_NOTHING, blank=True, null=True,
+        'Schedules', models.PROTECT, blank=True, null=True,
         db_column='schedule', verbose_name='Расписание',)
     # должны отправляться в Kafka
     # В это поле переносится информация из data_model.devices.common_address
@@ -250,7 +250,7 @@ class Devices(AssistMixin, models.Model):
         blank=True, null=True, choices=ENABLED, default=True,
         verbose_name='Включен',)
     protocol = models.ForeignKey(
-        'Protocols', models.DO_NOTHING, db_column='protocol',
+        'Protocols', models.PROTECT, db_column='protocol',
         blank=True, null=True, verbose_name='Протокол',)
     modbus_function = models.PositiveSmallIntegerField(
         choices=modbus_funcs, default=None,
@@ -468,10 +468,10 @@ class ModbusTypes(models.Model):
 class Params(models.Model):
     id = models.BigAutoField(primary_key=True)
     code = models.ForeignKey(
-        'SignalsGuide', models.DO_NOTHING, db_column='code',
+        'SignalsGuide', models.PROTECT, db_column='code',
         verbose_name='Код')
     asset = models.ForeignKey(
-        Assets, models.DO_NOTHING, db_column='asset',
+        Assets, models.PROTECT, db_column='asset',
         blank=True, null=True, verbose_name='Оборудование')
     timestamp = models.DateTimeField(
         auto_now=False, auto_now_add=False,
@@ -562,13 +562,13 @@ class Signals(AssistMixin, models.Model):
         blank=True, null=True, choices=ENABLED, default=True,
         verbose_name='Включен',)
     code = models.ForeignKey(
-        'SignalsGuide', models.DO_NOTHING, db_column='code',
+        'SignalsGuide', models.PROTECT, db_column='code',
         blank=True, null=True, verbose_name='Код')
     asset = models.ForeignKey(
-        Assets, models.DO_NOTHING, db_column='asset',
+        Assets, models.PROTECT, db_column='asset',
         blank=True, null=True, verbose_name='Оборудование')
     device = models.ForeignKey(
-        Devices, models.DO_NOTHING, db_column='device',
+        Devices, models.PROTECT, db_column='device',
         verbose_name='Прибор мониторинга')
     # это поле становится уиниверсальным для всех протоколов (объединяет прежние поля 'bytes', 'ioa')
     # в него переносится информация из data_model.signals.address
@@ -577,13 +577,13 @@ class Signals(AssistMixin, models.Model):
     bit = models.IntegerField(
         blank=True, null=True, verbose_name='Бит в регистре')
     value_type = models.ForeignKey(
-        'ModbusTypes', models.DO_NOTHING,
+        'ModbusTypes', models.PROTECT,
         blank=True, null=True, verbose_name='Тип данных modbus')
     modbus_function = models.PositiveSmallIntegerField(
         choices=modbus_funcs, default=None,
         blank=True, null=True, verbose_name='Функция чтения modbus',)
     unit_source = models.ForeignKey(
-        'MeasureUnits', models.DO_NOTHING,
+        'MeasureUnits', models.PROTECT,
         blank=True, null=True, verbose_name='Ед. измер. источника')
     deveui = models.CharField(
         max_length=200, blank=True, null=True,
@@ -612,10 +612,10 @@ class Signals(AssistMixin, models.Model):
         max_length=10, blank=True, null=True,
         verbose_name='Период проверки соединения')
     schedule = models.ForeignKey(
-        'Schedules', models.DO_NOTHING, blank=True, null=True,
+        'Schedules', models.PROTECT, blank=True, null=True,
         db_column='schedule', verbose_name='Расписание')
     formula = models.ForeignKey(
-        'Formulas', models.DO_NOTHING, db_column='formula',
+        'Formulas', models.PROTECT, db_column='formula',
         blank=True, null=True, verbose_name='Формула')
 
     class Meta:
@@ -688,15 +688,15 @@ class SignalsGuide(AssistMixin, models.Model):
     code = models.CharField(max_length=100, verbose_name='Код')
     name = models.CharField(max_length=300, verbose_name='Наименование')
     sg_type = models.ForeignKey(
-        'SignalTypes', models.DO_NOTHING, verbose_name='Тип сигнала')
+        'SignalTypes', models.PROTECT, verbose_name='Тип сигнала')
     unit = models.ForeignKey(
-        'MeasureUnits', models.DO_NOTHING,
+        'MeasureUnits', models.PROTECT,
         blank=True, null=True, verbose_name='Единица измерения')
     category = models.ForeignKey(
-        'SignalСategories', models.DO_NOTHING,
+        'SignalСategories', models.PROTECT,
         blank=True, null=True, verbose_name='Категория сигнала')
     group = models.ForeignKey(
-        'SignalGroups', models.DO_NOTHING,
+        'SignalGroups', models.PROTECT,
         blank=True, null=True, verbose_name='Группа сигнала')
     relevance_span = models.IntegerField(
         blank=True, null=True, verbose_name='Актуальность сигнала')
@@ -726,7 +726,7 @@ class SignalsGuide(AssistMixin, models.Model):
     opc_label = models.CharField(
         max_length=50, blank=True, null=True, verbose_name='Метка OPC')
     data_type = models.ForeignKey(
-        'DataTypes', models.DO_NOTHING,
+        'DataTypes', models.PROTECT,
         blank=True, null=True, verbose_name='Тип данных')
     precision = models.IntegerField(
         blank=True, null=True, verbose_name='Точность значения')
@@ -734,13 +734,13 @@ class SignalsGuide(AssistMixin, models.Model):
         blank=True, null=True, choices=ENABLED, default=False,
         verbose_name='На график',)
     plot_type = models.ForeignKey(
-        'PlotTypes', models.DO_NOTHING,
+        'PlotTypes', models.PROTECT,
         blank=True, null=True, verbose_name='Тип графика')
     databus_source = models.ForeignKey(
-        'DatabusSources', models.DO_NOTHING,
+        'DatabusSources', models.PROTECT,
         blank=True, null=True, verbose_name='Очередь шины данных')
     dynamic_storage = models.ForeignKey(
-        'DynamicStorages', models.DO_NOTHING,
+        'DynamicStorages', models.PROTECT,
         blank=True, null=True, verbose_name='Таблица хранения значений')
 
     class Meta:
@@ -793,10 +793,10 @@ class ChartTabs(models.Model):
 class AssetsTypeChartTabs(models.Model):
     code = models.CharField(max_length=50, verbose_name='Код')
     chart_tab = models.ForeignKey(
-        'ChartTabs', models.DO_NOTHING, db_column='chart_tab',
+        'ChartTabs', models.PROTECT, db_column='chart_tab',
         verbose_name='Вкладка графиков')
     asset_type = models.ForeignKey(
-        'AssetsType', models.DO_NOTHING, verbose_name='Категория оборудования')
+        'AssetsType', models.PROTECT, verbose_name='Категория оборудования')
 
     class Meta:
         managed = True
@@ -813,7 +813,7 @@ class SignalsChartTabs(models.Model):
         SignalsGuide, models.CASCADE, db_column='code',
         verbose_name='Код сигнала')
     chart_tab = models.ForeignKey(
-        AssetsTypeChartTabs, models.DO_NOTHING, db_column='chart_tab',
+        AssetsTypeChartTabs, models.PROTECT, db_column='chart_tab',
         verbose_name='Вкладка графиков')
     asset = models.ForeignKey(
         Assets, models.CASCADE, db_column='asset',
@@ -856,7 +856,7 @@ class Substations(models.Model):
         max_length=400, blank=True, null=True, verbose_name='Название')
     type = models.CharField(choices=NODE_TYPE, default='node',
                             max_length=10, verbose_name='Тип')
-    parent = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True,
+    parent = models.ForeignKey('self', models.PROTECT, blank=True, null=True,
                                limit_choices_to={'type': 'node'},
                                verbose_name='Входит в')
     scheme_image = models.ImageField(
@@ -876,7 +876,7 @@ class Substations(models.Model):
 class ManualMeasurements(models.Model):
     id = models.BigAutoField(primary_key=True)
     signal = models.ForeignKey(
-        Signals, models.DO_NOTHING, db_column='signal_id',
+        Signals, models.PROTECT, db_column='signal_id',
         verbose_name='Сигнал')
     timestamp = models.DateTimeField(
         auto_now=False, auto_now_add=False,

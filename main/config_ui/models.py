@@ -46,7 +46,7 @@ class BlockType(models.Model):
 class Block(models.Model):
     id = models.BigAutoField(primary_key=True)
     code = models.CharField(max_length=50, verbose_name='Код')
-    type = models.ForeignKey(BlockType, models.DO_NOTHING, blank=True, null=True, verbose_name='Тип')
+    type = models.ForeignKey(BlockType, models.PROTECT, blank=True, null=True, verbose_name='Тип')
     template = models.JSONField(verbose_name='Шаблон')
     description = models.CharField(max_length=150, blank=True, null=True, verbose_name='Описание')
 
@@ -123,7 +123,7 @@ class PageType(models.Model):
 class Page(models.Model):
     id = models.BigAutoField(primary_key=True)
     code = models.CharField(max_length=50, verbose_name='Код')
-    type = models.ForeignKey(PageType, models.DO_NOTHING, verbose_name='Тип')
+    type = models.ForeignKey(PageType, models.PROTECT, verbose_name='Тип')
     description = models.CharField(max_length=150, blank=True, null=True, verbose_name='Описание')
 
     class Meta:
@@ -215,7 +215,7 @@ class AssetPage(models.Model):
     asset = models.ForeignKey(
         Assets, models.CASCADE, verbose_name='Оборудование')
     page = models.ForeignKey(
-        Page, models.DO_NOTHING, verbose_name='Страница')
+        Page, models.PROTECT, verbose_name='Страница')
 
     class Meta:
         managed = True
@@ -250,7 +250,7 @@ class PassportSignals(models.Model):
     id = models.BigAutoField(primary_key=True)
     code = models.CharField(max_length=100, verbose_name='Код сигнала')
     pdata_category = models.ForeignKey(
-        PassportCategories, models.DO_NOTHING, verbose_name='Категория паспортных данных')
+        PassportCategories, models.PROTECT, verbose_name='Категория паспортных данных')
     order = models.IntegerField(default=2000000000, verbose_name='Порядковый номер')
 
     class Meta:

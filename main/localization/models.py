@@ -40,9 +40,9 @@ class DiagMsgTemplates(models.Model):
 class DiagMsgTranslts(models.Model):
     id = models.BigAutoField(primary_key=True)
     msg = models.ForeignKey(
-        DiagMsgTemplates, models.DO_NOTHING, db_column='msg_id', verbose_name='Шаблон диаг. сообщения')
+        DiagMsgTemplates, models.PROTECT, db_column='msg_id', verbose_name='Шаблон диаг. сообщения')
     lang = models.ForeignKey(
-        Langs, models.DO_NOTHING, db_column='lang_id', verbose_name='Язык')
+        Langs, models.PROTECT, db_column='lang_id', verbose_name='Язык')
     content = models.CharField(
         max_length=1500, verbose_name='Содержание')
 
@@ -75,10 +75,10 @@ class APILabels(models.Model):
 class APILabelsTranslts(models.Model):
     id = models.BigAutoField(primary_key=True)
     label = models.ForeignKey(
-        APILabels, models.DO_NOTHING, db_column='label',
+        APILabels, models.PROTECT, db_column='label',
         verbose_name='Метка API')
     lang = models.ForeignKey(
-        Langs, models.DO_NOTHING, db_column='lang_id', verbose_name='Язык')
+        Langs, models.PROTECT, db_column='lang_id', verbose_name='Язык')
     content = models.CharField(
         max_length=500, verbose_name='Содержание')
 
@@ -111,10 +111,10 @@ class Interfacelabels(models.Model):
 class InterfaceTranslts(models.Model):
     id = models.BigAutoField(primary_key=True)
     label = models.ForeignKey(
-        Interfacelabels, models.DO_NOTHING, db_column='label',
+        Interfacelabels, models.PROTECT, db_column='label',
         verbose_name='Метка польз. интерфейса')
     lang = models.ForeignKey(
-        Langs, models.DO_NOTHING, db_column='lang_id', verbose_name='Язык')
+        Langs, models.PROTECT, db_column='lang_id', verbose_name='Язык')
     content = models.CharField(
         max_length=500, verbose_name='Содержание')
 
@@ -134,10 +134,10 @@ class InterfaceTranslts(models.Model):
 class DiagMsgLevelTranslts(models.Model):
     id = models.BigAutoField(primary_key=True)
     level = models.ForeignKey(
-        DiagMsgLevel, models.DO_NOTHING, db_column='level',
+        DiagMsgLevel, models.PROTECT, db_column='level',
         verbose_name='Уровень критичности')
     lang = models.ForeignKey(
-        Langs, models.DO_NOTHING, db_column='lang_id', verbose_name='Язык')
+        Langs, models.PROTECT, db_column='lang_id', verbose_name='Язык')
     content = models.CharField(
         max_length=500, verbose_name='Содержание')
 
@@ -157,10 +157,10 @@ class DiagMsgLevelTranslts(models.Model):
 class SignalsGuideTranslts(models.Model):
     id = models.BigAutoField(primary_key=True)
     sgn_guide = models.ForeignKey(
-        SignalsGuide, models.DO_NOTHING, db_column='sgn_guide',
+        SignalsGuide, models.PROTECT, db_column='sgn_guide',
         verbose_name='Код сигнала')
     lang = models.ForeignKey(
-        Langs, models.DO_NOTHING, db_column='lang_id', verbose_name='Язык')
+        Langs, models.PROTECT, db_column='lang_id', verbose_name='Язык')
     content = models.CharField(
         max_length=500, verbose_name='Содержание')
 
@@ -180,10 +180,10 @@ class SignalsGuideTranslts(models.Model):
 class SignalsCategoriesTranslts(models.Model):
     id = models.BigAutoField(primary_key=True)
     category = models.ForeignKey(
-        SignalСategories, models.DO_NOTHING, db_column='category',
+        SignalСategories, models.PROTECT, db_column='category',
         verbose_name='Категория сигнала')
     lang = models.ForeignKey(
-        Langs, models.DO_NOTHING, db_column='lang_id', verbose_name='Язык')
+        Langs, models.PROTECT, db_column='lang_id', verbose_name='Язык')
     content = models.CharField(
         max_length=500, verbose_name='Содержание')
 
@@ -204,7 +204,7 @@ class PassportCategoriesTranslts(models.Model):
     id = models.BigAutoField(primary_key=True)
     code = models.CharField(max_length=100, verbose_name='Код категории')
     lang = models.ForeignKey(
-        Langs, models.DO_NOTHING, db_column='lang_id', verbose_name='Язык')
+        Langs, models.PROTECT, db_column='lang_id', verbose_name='Язык')
     content = models.CharField(
         max_length=500, verbose_name='Содержание')
 
@@ -224,10 +224,10 @@ class PassportCategoriesTranslts(models.Model):
 class MeasureUnitsTranslts(models.Model):
     id = models.BigAutoField(primary_key=True)
     unit = models.ForeignKey(
-        MeasureUnits, models.DO_NOTHING, db_column='unit',
+        MeasureUnits, models.PROTECT, db_column='unit',
         verbose_name='Единица измерения')
     lang = models.ForeignKey(
-        Langs, models.DO_NOTHING, db_column='lang_id', verbose_name='Язык')
+        Langs, models.PROTECT, db_column='lang_id', verbose_name='Язык')
     content = models.CharField(
         max_length=500, verbose_name='Содержание')
 
@@ -247,10 +247,10 @@ class MeasureUnitsTranslts(models.Model):
 class AssetsTypeTranslts(models.Model):
     id = models.BigAutoField(primary_key=True)
     a_type = models.ForeignKey(
-        AssetsType, models.DO_NOTHING, db_column='a_type',
+        AssetsType, models.PROTECT, db_column='a_type',
         verbose_name='Категория оборудования')
     lang = models.ForeignKey(
-        Langs, models.DO_NOTHING, db_column='lang_id', verbose_name='Язык')
+        Langs, models.PROTECT, db_column='lang_id', verbose_name='Язык')
     content = models.CharField(
         max_length=500, verbose_name='Содержание')
 
