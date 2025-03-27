@@ -13,6 +13,10 @@ def __import_by_manager_list(wb: Workbook, manager_list: List[ImportManager]):
         manager.set_cache(cache)
         manager.import_all(wb)
 
+def delete_all(manager_list: List[ImportManager]):
+    """Удаляет из базы данных все записи для данных менеджеров."""
+    for manager in manager_list[::-1]:
+        manager.delete_all()
 
 def import_in_migration(localization_file: Path, import_mngs: list[ImportManager]):
     """Миграция данных локализации во время начальных миграций"""
@@ -22,8 +26,10 @@ def import_in_migration(localization_file: Path, import_mngs: list[ImportManager
     )
 
 
-def import_all_data(localization_file: Path):
+def import_all_data(localization_file: Path, clear_db: bool = False):
     """Импорт всех данных локализации из xls"""
+    if clear_db:
+        delete_all(imports_all_data)
     __import_by_manager_list(
         wb=load_workbook(localization_file, data_only=True),
         manager_list=imports_all_data

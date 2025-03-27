@@ -37,6 +37,16 @@ class ImportManager:
 
         print(".", end="", flush=True)
 
+    def delete_all(self):
+        try:
+            count, _ = self.__model.objects.all().delete()
+        except Exception as ex:
+            print(flush=True)
+            logger.error(f"Ошибка удаления всех данных {self.__model}."
+                         f"\nEXCEPTION: {ex}")
+        else:
+            logger.info(f"При удалении всех данных {self.__model} удалено записей из БД: {count}")
+
     def import_obj(self, ws: Worksheet):
         pk = PKey()
         create_args = {}
