@@ -383,8 +383,7 @@ class Devices(AssistMixin, models.Model):
         return result
 
     @classmethod
-    def changes_for_kafka(cls, signal: type,
-                          debug_level: int = 1) -> tuple[List[dict]]:
+    def changes_for_kafka(cls) -> tuple[List[dict]]:
         """Возвращает (readers: list[tuple], listeners: list[tuple])
         приборов в виде подготовленом для отправки в Kafka.
         debug_level:
