@@ -823,12 +823,6 @@ class DataTypesAdmin(admin.ModelAdmin):
     search_fields = ('id', 'code', 'name',)
 
 
-class MsgToPlotAdmin(admin.ModelAdmin):
-    list_display = ('id', 'diag_model', 'signal', 'value')
-    list_display_links = ('id', 'diag_model', 'signal', 'value')
-    search_fields = ('diag_model', 'signal', 'value')
-
-
 class DiagMsgLevelAdmin(admin.ModelAdmin):
     list_display = ('code', 'name')
     search_fields = ('code', 'name')
@@ -915,7 +909,6 @@ admin.site.register(Substations, SubstationsAdmin)
 admin.site.register(ManualMeasurements, ManualMeasurementsAdmin)
 admin.site.register(MeasureUnits, MeasureUnitsAdmin)
 admin.site.register(DataTypes, DataTypesAdmin)
-admin.site.register(MsgToPlot, MsgToPlotAdmin)
 admin.site.register(DiagMsgLevel, DiagMsgLevelAdmin)
 admin.site.register(GeoMap, GeoMapAdmin)
 admin.site.register(GeoMapSetting, GeoMapSettingAdmin)
